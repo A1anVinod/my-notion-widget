@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Progress Widget</title>
+
+    <style>
+        /* Smoothly animatable progress values */
+        @property --level-progress {
+            syntax: "<number>";
+            inherits: false;
+            initial-value: 0;
+        }
+
+        @property --xp-progress {
+            syntax: "<number>";
+            inherits: false;
+            initial-value: 0;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #111;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        .widget {
+            display: flex;
+            align-items: flex-start;
+            gap: 30px;
+        }
+
+        .item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .heading {
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 1px;
+        }
+
+        /* Common circle */
+        .circle {
+            width: 120px;
+            height: 120px;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 28px;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        /* LEVEL */
+        .level-circle {
+            --level-progress: 0;
+
+            background: conic-gradient(
+                #8B5CF6 calc(var(--level-progress) * 1%),
+                #444 calc(var(--level-progress) * 1%)
+            );
+
+            transition: --level-progress 2s ease;
+        }
+
+        .level-circle::before {
+            content: "";
+            position: absolute;
+            width: 104px;
+            height: 104px;
+            background: #111;
+            border-radius: 50%;
+        }
+
+        .level-value {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* XP */
+        .xp-circle {
+            --xp-progress: 0;
+
+            background: conic-gradient(
+                #4CAF50 calc(var(--xp-progress) * 1%),
+                #444 calc(var(--xp-progress) * 1%)
+            );
+
+            transition: --xp-progress 2s ease;
+        }
+
+        .xp-circle::before {
+            content: "";
+            position: absolute;
+            width: 104px;
+            height: 104px;
+            background: #111;
+            border-radius: 50%;
+        }
+
+        .xp-value {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Input controls */
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 5px;
+        }
+
+        input {
+            width: 55px;
+            padding: 5px;
+            text-align: center;
+        }
+
+        button {
+            padding: 5px 8px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="widget">
+
+        <!-- LEVEL -->
+        <div class="item">
+            <div class="heading">LEVEL</div>
+
+            <div class="circle level-circle" id="levelCircle">
+                <span class="level-value" id="levelValue">0</span>
+            </div>
+
+            <div class="controls">
+                <input
+                    type="number"
+                    id="levelInput"
+                    min="0"
+                    max="100"
+                    value="0"
+                >
+                <button onclick="setLevel()">Set</button>
+            </div>
+        </div>
+
+
+        <!-- XP -->
+        <div class="item">
+            <div class="heading">XP</div>
+
+            <div class="circle xp-circle" id="xpCircle">
+                <span class="xp-value" id="xpValue">0%</span>
+            </div>
+
+            <div class="controls">
+                <input
+                    type="number"
+                    id="xpInput"
+                    min="0"
+                    value="0"
+                >
+                <button onclick="setXP()">Add</button>
+            </div>
+        </div>
+
+    </div>
+
+
+    <script>
+
+        /* =========================
+           UPDATE LEVEL CIRCLE
+           ========================= */
+
+        function updateLevelCircle(level) {
+
+            document.getElementById("levelValue").textContent = level;
+
+            document
+                .getElementById("levelCircle")
+                .style.setProperty("--level-progress", level);
+        }
+
+
+        /* =========================
+           ADD XP
+           ========================= */
+
+        function setXP() {
+
+            let xpToAdd =
+                Number(document.getElementById("xpInput").value);
+
+            if (xpToAdd < 0) {
+                xpToAdd = 0;
+            }
+
+
+            /* Current level */
+            let currentLevel =
+                Number(
+                    document.getElementById("levelValue").textContent
+                );
+
+
+            /* Current XP */
+            let currentXP =
+                Number(
+                    document
+                        .getElementById("xpValue")
+                        .textContent
+                        .replace("%", "")
+                );
+
+
+            /* Add new XP to existing XP */
+            let totalXP = currentXP + xpToAdd;
+
+
+            /* Complete levels */
+            let levelIncrease =
+                Math.floor(totalXP / 100);
+
+
+            /* Remaining XP */
+            let remainingXP =
+                totalXP % 100;
+
+
+            /* Increase level */
+            currentLevel =
+                currentLevel + levelIncrease;
+
+
+            /* Maximum level = 100 */
+            if (currentLevel > 100) {
+                currentLevel = 100;
+            }
+
+
+            /* Update Level */
+            updateLevelCircle(currentLevel);
+
+
+            /* Update XP text */
+            document.getElementById("xpValue").textContent =
+                remainingXP + "%";
+
+
+            /* Update XP ring */
+            document
+                .getElementById("xpCircle")
+                .style.setProperty("--xp-progress", remainingXP);
+
+
+            /* Show remaining XP in input */
+            document.getElementById("xpInput").value =
+                "";
+
+
+            /* Save progress */
+            localStorage.setItem(
+                "widgetData",
+                JSON.stringify({
+                    level: currentLevel,
+                    xp: remainingXP
+                })
+            );
+        }
+
+
+        /* =========================
+           SET LEVEL DIRECTLY
+           ========================= */
+
+        function setLevel() {
+
+            let level =
+                Number(
+                    document.getElementById("levelInput").value
+                );
+
+
+            if (level < 0) {
+                level = 0;
+            }
+
+            if (level > 100) {
+                level = 100;
+            }
+
+
+            /* Update level */
+            updateLevelCircle(level);
+
+
+            /* Current XP */
+            let currentXP =
+                Number(
+                    document
+                        .getElementById("xpValue")
+                        .textContent
+                        .replace("%", "")
+                );
+
+
+            /* Save */
+            localStorage.setItem(
+                "widgetData",
+                JSON.stringify({
+                    level: level,
+                    xp: currentXP
+                })
+            );
+        }
+
+
+        /* =========================
+           LOAD SAVED DATA
+           ========================= */
+
+        let savedData =
+            localStorage.getItem("widgetData");
+
+
+        if (savedData) {
+
+            try {
+
+                let data =
+                    JSON.parse(savedData);
+
+
+                let savedLevel =
+                    Number(data.level) || 0;
+
+                let savedXP =
+                    Number(data.xp) || 0;
+
+
+                /* Keep values within limits */
+                if (savedLevel < 0) {
+                    savedLevel = 0;
+                }
+
+                if (savedLevel > 100) {
+                    savedLevel = 100;
+                }
+
+                if (savedXP < 0) {
+                    savedXP = 0;
+                }
+
+                if (savedXP > 99) {
+                    savedXP = 99;
+                }
+
+
+                /* Restore Level */
+                updateLevelCircle(savedLevel);
+
+                document.getElementById("levelInput").value =
+                    savedLevel;
+
+
+                /* Restore XP */
+                document.getElementById("xpValue").textContent =
+                    savedXP + "%";
+
+                document
+                    .getElementById("xpCircle")
+                    .style.setProperty("--xp-progress", savedXP);
+
+                document.getElementById("xpInput").value =
+                    "";
+
+
+            } catch (error) {
+
+                console.log(
+                    "Could not load saved data."
+                );
+            }
+        }
+
+
+        /* =========================
+           INITIAL STATE
+           ========================= */
+
+        if (!savedData) {
+
+            updateLevelCircle(0);
+
+            document
+                .getElementById("xpCircle")
+                .style.setProperty("--xp-progress", 0);
+        }
+
+    </script>
+
+</body>
+</html>
