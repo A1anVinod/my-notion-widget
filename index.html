@@ -180,6 +180,8 @@
 
 
     <script>
+        const statName =new URLSearchParams(window.location.search).get("stat") || "default";
+        const storageKey = "widgetData_" + statName;
 
         /* =========================
            UPDATE LEVEL CIRCLE
@@ -272,8 +274,7 @@
 
 
             /* Save progress */
-            localStorage.setItem(
-                "widgetData",
+            localStorage.setItem(storageKey,
                 JSON.stringify({
                     level: currentLevel,
                     xp: remainingXP
@@ -318,8 +319,7 @@
 
 
             /* Save */
-            localStorage.setItem(
-                "widgetData",
+            localStorage.setItem(storageKey,
                 JSON.stringify({
                     level: level,
                     xp: currentXP
@@ -333,7 +333,7 @@
            ========================= */
 
         let savedData =
-            localStorage.getItem("widgetData");
+            localStorage.getItem(storageKey);
 
 
         if (savedData) {
